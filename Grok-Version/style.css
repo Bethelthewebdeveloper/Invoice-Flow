@@ -1,0 +1,125 @@
+/* Custom styles beyond Tailwind */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.nav-btn.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.section.hidden {
+  display: none;
+}
+
+.line-item-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+@media (max-width: 640px) {
+  .line-item-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Invoice Preview Styles */
+.invoice-preview-content {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.invoice-preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.invoice-preview-content th,
+.invoice-preview-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.invoice-preview-content th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.invoice-preview-content .text-right {
+  text-align: right;
+}
+
+.invoice-preview-content .totals {
+  margin-top: 1rem;
+  border-top: 2px solid #1f2937;
+  padding-top: 0.5rem;
+}
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #invoice-preview,
+  #invoice-preview * {
+    visibility: visible;
+  }
+  #invoice-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  header,
+  nav,
+  .nav-btn,
+  button,
+  #data-tools,
+  .section:not(#invoice-form),
+  #toast,
+  #invoice-form > .flex,
+  #invoice-form .grid > .bg-white:first-child,
+  #invoice-form .mt-4,
+  #reminder-output,
+  #copy-reminder-btn,
+  h3 {
+    display: none !important;
+  }
+  .serial-number-print.hidden-serial {
+    display: none !important;
+  }
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+  .invoice-preview-content {
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+  .invoice-preview-content table {
+    page-break-inside: auto;
+  }
+  .invoice-preview-content tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
+
+/* Error states */
+input:invalid, select:invalid, textarea:invalid {
+  border-color: #ef4444;
+}
+
+.text-error {
+  color: #dc2626;
+}

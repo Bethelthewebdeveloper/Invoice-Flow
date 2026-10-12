@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InvoiceFlow</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen">
+<header class="bg-white border-b border-gray-200">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+    <a href="#/dashboard" class="font-bold text-lg">InvoiceFlow</a>
+    <nav class="flex gap-1 text-sm" aria-label="Main">
+      <a href="#/dashboard" data-nav="dashboard" class="nav">Dashboard</a>
+      <a href="#/clients" data-nav="clients" class="nav">Clients</a>
+      <a href="#/profile" data-nav="profile" class="nav">Business profile</a>
+      <a href="#/data" data-nav="data" class="nav">Backup</a>
+    </nav>
+    <a href="#/invoice/new" class="btn ml-auto">New invoice</a>
+  </div>
+</header>
+<main id="view" class="max-w-6xl mx-auto px-4 py-6"></main>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <p id="dlg-msg" class="mb-4"></p>
+    <div class="flex justify-end gap-2">
+      <button value="cancel" class="btn-secondary">Cancel</button>
+      <button value="ok" class="btn-danger">Confirm</button>
+    </div>
+  </form>
+</dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+<div id="print-area"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

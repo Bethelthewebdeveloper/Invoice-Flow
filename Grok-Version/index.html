@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvoiceFlow — International Freelancer Invoice Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+  <!-- Header / Navigation -->
+  <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold text-blue-700">InvoiceFlow</h1>
+          <span class="ml-2 text-sm text-gray-500 hidden sm:inline">International Freelancer Invoice Generator</span>
+        </div>
+        <nav class="flex space-x-1 sm:space-x-4">
+          <button data-section="dashboard" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">Dashboard</button>
+          <button data-section="invoices" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">Invoices</button>
+          <button data-section="clients" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">Clients</button>
+          <button data-section="profile" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">Profile</button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="section">
+      <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+      <div id="dashboard-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
+      <div class="mb-4 flex flex-col sm:flex-row gap-4">
+        <input type="text" id="search-invoices" placeholder="Search by invoice number or client..." class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select id="filter-status" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">All Statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Sent">Sent</option>
+          <option value="Partially Paid">Partially Paid</option>
+          <option value="Paid">Paid</option>
+          <option value="Overdue">Overdue</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div id="recent-invoices" class="bg-white shadow rounded-lg overflow-hidden"></div>
+    </section>
+
+    <!-- Invoices List Section -->
+    <section id="invoices" class="section hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Invoices</h2>
+        <button id="new-invoice-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">New Invoice</button>
+      </div>
+      <div id="invoices-list" class="bg-white shadow rounded-lg overflow-hidden"></div>
+    </section>
+
+    <!-- Invoice Form / Editor Section -->
+    <section id="invoice-form" class="section hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold" id="invoice-form-title">Create Invoice</h2>
+        <button id="back-to-invoices" class="text-blue-600 hover:underline">Back to Invoices</button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Form -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <form id="invoice-editor-form">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Invoice Number</label>
+              <input type="text" id="invoice-serial" readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+            </div>
+            <div class="mb-4">
+              <label for="invoice-client" class="block text-sm font-medium text-gray-700">Client *</label>
+              <select id="invoice-client" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+              <p class="text-red-600 text-xs mt-1 hidden" id="client-error">Please select a client.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="issue-date" class="block text-sm font-medium text-gray-700">Issue Date *</label>
+                <input type="date" id="issue-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label for="due-date" class="block text-sm font-medium text-gray-700">Due Date *</label>
+                <input type="date" id="due-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="invoice-description" class="block text-sm font-medium text-gray-700">Description</label>
+              <input type="text" id="invoice-description" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Website development services">
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700">Currency *</label>
+              <select id="invoice-currency" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+            </div>
+            <!-- Line Items -->
+            <div class="mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-medium text-gray-700">Line Items *</label>
+                <button type="button" id="add-line-item" class="text-blue-600 text-sm hover:underline">+ Add Item</button>
+              </div>
+              <div id="line-items-container" class="space-y-3"></div>
+              <p class="text-red-600 text-xs mt-1 hidden" id="line-items-error">At least one valid line item is required.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="discount-amount" class="block text-sm font-medium text-gray-700">Discount Amount (optional)</label>
+                <input type="number" id="discount-amount" min="0" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+              </div>
+              <div>
+                <label for="tax-rate" class="block text-sm font-medium text-gray-700">Tax Rate % (optional)</label>
+                <input type="number" id="tax-rate" min="0" max="100" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0">
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="payment-instructions" class="block text-sm font-medium text-gray-700">Payment Instructions</label>
+              <textarea id="payment-instructions" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="mb-4">
+              <label for="invoice-notes" class="block text-sm font-medium text-gray-700">Notes</label>
+              <textarea id="invoice-notes" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="mb-4">
+              <label for="invoice-status" class="block text-sm font-medium text-gray-700">Status</label>
+              <select id="invoice-status" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="Draft">Draft</option>
+                <option value="Sent">Sent</option>
+                <option value="Partially Paid">Partially Paid</option>
+                <option value="Paid">Paid</option>
+                <option value="Overdue">Overdue</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="flex gap-3">
+              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Save Invoice</button>
+              <button type="button" id="save-draft-btn" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">Save as Draft</button>
+            </div>
+            <p id="invoice-form-error" class="text-red-600 text-sm mt-2 hidden"></p>
+          </form>
+        </div>
+        <!-- Preview -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-4">Invoice Preview</h3>
+          <div id="invoice-preview" class="border border-gray-200 p-4 rounded min-h-[400px] text-sm"></div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button id="download-pdf-btn" class="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700">Download PDF</button>
+            <button id="print-invoice-btn" class="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700">Print Invoice</button>
+            <label class="flex items-center text-sm">
+              <input type="checkbox" id="include-serial-print" class="mr-2"> Include serial number when printing
+            </label>
+          </div>
+          <div class="mt-4">
+            <button id="generate-reminder-btn" class="text-blue-600 text-sm hover:underline">Generate Payment Reminder</button>
+            <div id="reminder-output" class="mt-2 p-3 bg-gray-50 rounded text-sm hidden"></div>
+            <button id="copy-reminder-btn" class="mt-1 text-blue-600 text-xs hover:underline hidden">Copy Message</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clients Section -->
+    <section id="clients" class="section hidden">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Clients</h2>
+        <button id="new-client-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Add Client</button>
+      </div>
+      <div id="clients-list" class="bg-white shadow rounded-lg overflow-hidden"></div>
+    </section>
+
+    <!-- Client Form (modal-like or section) -->
+    <section id="client-form" class="section hidden">
+      <h2 class="text-2xl font-bold mb-6" id="client-form-title">Add Client</h2>
+      <form id="client-editor-form" class="bg-white p-6 rounded-lg shadow max-w-lg">
+        <div class="mb-4">
+          <label for="client-name" class="block text-sm font-medium text-gray-700">Name / Business Name *</label>
+          <input type="text" id="client-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label for="client-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="client-email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label for="client-phone" class="block text-sm font-medium text-gray-700">Phone</label>
+          <input type="tel" id="client-phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label for="client-address" class="block text-sm font-medium text-gray-700">Billing Address</label>
+          <textarea id="client-address" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+        </div>
+        <div class="mb-4">
+          <label for="client-notes" class="block text-sm font-medium text-gray-700">Notes</label>
+          <textarea id="client-notes" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Save Client</button>
+          <button type="button" id="cancel-client" class="bg-gray-300 px-4 py-2 rounded-md">Cancel</button>
+        </div>
+        <p id="client-form-error" class="text-red-600 text-sm mt-2 hidden"></p>
+      </form>
+    </section>
+
+    <!-- Profile Section -->
+    <section id="profile" class="section hidden">
+      <h2 class="text-2xl font-bold mb-6">Business Profile</h2>
+      <form id="profile-form" class="bg-white p-6 rounded-lg shadow max-w-2xl">
+        <div class="mb-4">
+          <label for="business-name" class="block text-sm font-medium text-gray-700">Business / Freelancer Name *</label>
+          <input type="text" id="business-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="business-email" class="block text-sm font-medium text-gray-700">Email *</label>
+            <input type="email" id="business-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+          <div>
+            <label for="business-phone" class="block text-sm font-medium text-gray-700">Phone</label>
+            <input type="tel" id="business-phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="business-address" class="block text-sm font-medium text-gray-700">Address</label>
+          <textarea id="business-address" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+        </div>
+        <div class="mb-4">
+          <label for="business-website" class="block text-sm font-medium text-gray-700">Website</label>
+          <input type="url" id="business-website" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="https://">
+        </div>
+        <div class="mb-4">
+          <label for="business-logo" class="block text-sm font-medium text-gray-700">Logo (max 500KB, image only)</label>
+          <input type="file" id="business-logo" accept="image/*" class="mt-1 block w-full text-sm">
+          <div id="logo-preview" class="mt-2 hidden"><img id="logo-img" class="max-h-16" alt="Logo"></div>
+        </div>
+        <div class="mb-4">
+          <label for="default-currency" class="block text-sm font-medium text-gray-700">Default Currency</label>
+          <select id="default-currency" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></select>
+        </div>
+        <div class="mb-4">
+          <label for="default-payment-instructions" class="block text-sm font-medium text-gray-700">Default Payment Instructions</label>
+          <textarea id="default-payment-instructions" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Save Profile</button>
+        <p id="profile-message" class="text-green-600 text-sm mt-2 hidden"></p>
+      </form>
+    </section>
+
+    <!-- Payment Recording Modal-like section -->
+    <section id="payment-form" class="section hidden">
+      <h2 class="text-2xl font-bold mb-6">Record Payment</h2>
+      <form id="payment-editor-form" class="bg-white p-6 rounded-lg shadow max-w-lg">
+        <input type="hidden" id="payment-invoice-id">
+        <div class="mb-4">
+          <label class="block text-sm font-medium">Invoice: <span id="payment-invoice-serial"></span></label>
+          <p class="text-sm text-gray-600">Outstanding: <span id="payment-outstanding"></span></p>
+        </div>
+        <div class="mb-4">
+          <label for="payment-date" class="block text-sm font-medium text-gray-700">Payment Date *</label>
+          <input type="date" id="payment-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label for="payment-amount" class="block text-sm font-medium text-gray-700">Amount Received *</label>
+          <input type="number" id="payment-amount" min="0.01" step="0.01" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label for="payment-reference" class="block text-sm font-medium text-gray-700">Reference (optional)</label>
+          <input type="text" id="payment-reference" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+        </div>
+        <div class="mb-4">
+          <label for="payment-notes" class="block text-sm font-medium text-gray-700">Notes</label>
+          <textarea id="payment-notes" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md">Record Payment</button>
+          <button type="button" id="cancel-payment" class="bg-gray-300 px-4 py-2 rounded-md">Cancel</button>
+        </div>
+        <p id="payment-form-error" class="text-red-600 text-sm mt-2 hidden"></p>
+      </form>
+    </section>
+
+    <!-- Export/Import Section (accessible from dashboard or profile) -->
+    <div id="data-tools" class="mt-8 bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">Data Backup & Export</h3>
+      <div class="flex flex-wrap gap-3">
+        <button id="export-invoices-csv" class="bg-gray-600 text-white px-3 py-2 rounded text-sm">Export Invoices CSV</button>
+        <button id="export-clients-csv" class="bg-gray-600 text-white px-3 py-2 rounded text-sm">Export Clients CSV</button>
+        <button id="export-json-backup" class="bg-blue-600 text-white px-3 py-2 rounded text-sm">Export JSON Backup</button>
+        <label class="bg-green-600 text-white px-3 py-2 rounded text-sm cursor-pointer">
+          Import JSON Backup
+          <input type="file" id="import-json" accept=".json" class="hidden">
+        </label>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">Importing will replace all current data after confirmation. Always keep a backup.</p>
+    </div>
+  </main>
+
+  <!-- Toast / Messages -->
+  <div id="toast" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow hidden z-50"></div>
+
+  <!-- Print-only styles are in CSS -->
+  <script src="script.js"></script>
+</body>
+</html>
